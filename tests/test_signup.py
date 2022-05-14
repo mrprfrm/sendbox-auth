@@ -6,10 +6,10 @@ from app.models import User
 
 
 @pytest.mark.usefixtures("app", "client")
-def test_register(app, client):
+def test_signup(app, client):
     with app.app_context():
         response = client.post(
-            "/register",
+            "/signup",
             data=json.dumps({"username": "usr", "password": "1"}),
             content_type="application/json",
         )
@@ -19,18 +19,18 @@ def test_register(app, client):
 
 @pytest.mark.usefixtures("app", "client")
 @pytest.mark.parametrize("data", ({"username": "usr"}, {"password": "1"}, {}))
-def test_register_with_wrong_data(app, client, data):
+def test_signup_with_wrong_data(app, client, data):
     with app.app_context():
         response = client.post(
-            "/register", data=json.dumps(data), content_type="application/json"
+            "/signup", data=json.dumps(data), content_type="application/json"
         )
         assert response.status_code == 400
 
 
 @pytest.mark.usefixtures("app", "client", "user")
-def test_register_with_existing_username(app, client):
+def test_signup_with_existing_username(app, client):
     response = client.post(
-        "/register",
+        "/signup",
         data=json.dumps({"username": "usr", "password": "1"}),
         content_type="application/json",
     )

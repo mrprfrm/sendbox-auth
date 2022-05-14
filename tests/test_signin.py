@@ -4,10 +4,10 @@ import pytest
 
 
 @pytest.mark.usefixtures("app", "client", "user")
-def test_login(app, client):
+def test_signin(app, client):
     with app.app_context():
         response = client.post(
-            "/login",
+            "/signin",
             data=json.dumps({"username": "usr", "password": "1"}),
             content_type="application/json",
         )
@@ -16,19 +16,19 @@ def test_login(app, client):
 
 @pytest.mark.usefixtures("app", "client", "user")
 @pytest.mark.parametrize("data", ({"username": "usr"}, {"password": "1"}, {}))
-def test_login_with_wrong_data(app, client, data):
+def test_signin_with_wrong_data(app, client, data):
     with app.app_context():
         response = client.post(
-            "/login", data=json.dumps(data), content_type="application/json"
+            "/signin", data=json.dumps(data), content_type="application/json"
         )
         assert response.status_code == 400
 
 
 @pytest.mark.usefixtures("app", "client", "user")
-def test_login_with_wrong_password(app, client):
+def test_signin_with_wrong_password(app, client):
     with app.app_context():
         response = client.post(
-            "/login",
+            "/signin",
             data=json.dumps({"username": "usr", "password": "2"}),
             content_type="application/json",
         )

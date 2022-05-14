@@ -9,7 +9,7 @@ def refresh_token(user):
 
 
 @pytest.mark.usefixtures("app", "client", "refresh_token", "user")
-def test_login(app, client, refresh_token):
+def test_refresh(app, client, refresh_token):
     with app.app_context():
         response = client.post(
             "/refresh",

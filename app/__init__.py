@@ -1,5 +1,6 @@
 import uuid
 
+from flask_cors import cross_origin
 from flask import Flask, g, jsonify, request
 from flask_jwt_extended import (
     JWTManager,
@@ -10,6 +11,7 @@ from flask_jwt_extended import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from .utils import to_camelcase
 from .database import init_app
 from .models import User
 
@@ -20,8 +22,9 @@ def create_app():
     JWTManager(app)
     init_app(app)
 
-    @app.route("/register", methods=["POST"])
-    def register():
+    @app.route("/signup", methods=["POST", "OPTIONS"])
+    @cross_origin(headers=['Content-Type'])
+    def signup():
         username = request.json.get("username", None)
         password = request.json.get("password", None)
 
@@ -39,16 +42,23 @@ def create_app():
             )
 
         password_hash = generate_password_hash(password)
-        usr = User(id=str(uuid.uuid4()), username=username, password=password_hash)
-        g.db.session.add(usr)
+        user = User(id=str(uuid.uuid4()), username=username, password=password_hash)
+        g.db.session.add(user)
         g.db.session.commit()
 
-        access_token = create_access_token(identity=username, fresh=True)
-        refresh_token = create_refresh_token(identity=username)
-        return jsonify(access_token=access_token, refresh_token=refresh_token)
+        access_token = create_access_token(identity=user.id, fresh=True)
+        refresh_token = create_refresh_token(identity=user.id)
+        return jsonify(
+            **dict(to_camelcase({
+                "user": {"id": user.id, "username": username},
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }))
+        )
 
-    @app.route("/login", methods=["POST"])
-    def login():
+    @app.route("/signin", methods=["POST", "OPTIONS"])
+    @cross_origin(headers=['Content-Type'])
+    def signin():
         username = request.json.get("username", None)
         password = request.json.get("password", None)
 
@@ -67,15 +77,28 @@ def create_app():
                 401,
             )
 
-        access_token = create_access_token(identity=username, fresh=True)
-        refresh_token = create_refresh_token(identity=username)
-        return jsonify(access_token=access_token, refresh_token=refresh_token)
+        access_token = create_access_token(identity=user.id, fresh=True)
+        refresh_token = create_refresh_token(identity=user.id)
+        return jsonify(
+            **dict(to_camelcase({
+                "user": {"id": user.id, "username": user.username},
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }))
+        )
 
-    @app.route("/refresh", methods=["POST"])
+    @app.route("/refresh", methods=["POST", "OPTIONS"])
+    @cross_origin(headers=['Content-Type', 'Authorization'])
     @jwt_required(refresh=True)
     def refresh():
         identity = get_jwt_identity()
+        user = User.query.filter(User.id == identity).first()
         access_token = create_access_token(identity=identity, fresh=False)
-        return jsonify(access_token=access_token)
+        return jsonify(
+            **dict(to_camelcase({
+                "access_token": access_token,
+                "user": {"id": user.id, "username": user.username}
+            }))
+        )
 
     return app
