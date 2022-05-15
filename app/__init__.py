@@ -48,6 +48,7 @@ def create_app():
 
         access_token = create_access_token(identity=user.id, fresh=True)
         refresh_token = create_refresh_token(identity=user.id)
+        # TODO convert to_camelcase in middleware
         return jsonify(
             **dict(to_camelcase({
                 "user": {"id": user.id, "username": username},
@@ -79,6 +80,7 @@ def create_app():
 
         access_token = create_access_token(identity=user.id, fresh=True)
         refresh_token = create_refresh_token(identity=user.id)
+        # TODO convert to_camelcase in middleware
         return jsonify(
             **dict(to_camelcase({
                 "user": {"id": user.id, "username": user.username},
@@ -94,6 +96,7 @@ def create_app():
         identity = get_jwt_identity()
         user = User.query.filter(User.id == identity).first()
         access_token = create_access_token(identity=identity, fresh=False)
+        # TODO convert to_camelcase in middleware
         return jsonify(
             **dict(to_camelcase({
                 "access_token": access_token,
